@@ -1,0 +1,46 @@
+{
+  "ip": "127.0.0.1",
+  "hostname": "localhost",
+  "mac": "",
+  "device_type": "linux",
+  "reachable": true,
+  "open_ports": [
+    22
+  ],
+  "last_scan": "2025-05-04T12:54:26.224288917+05:30",
+  "os_info": {
+    "name": "Ubuntu",
+    "version": "20.04.6 LTS (Focal Fossa)",
+    "distribution": "ubuntu",
+    "kernel": "5.15.0-136-generic",
+    "architecture": "x86_64"
+  },
+  "hardware_info": {
+    "cpu_model": "Intel(R) Core(TM) i7-10610U CPU @ 1.80GHz",
+    "cpu_cores": 8,
+    "total_ram_mb": 15616,
+    "total_disk_space_gb": 234,
+    "free_disk_space_gb": 172
+  },
+  "network_info": {
+    "interfaces": [
+      {
+        "name": "wlp0s20f3",
+        "mac": "90:cc:df:b2:72:49",
+        "ip": "192.168.1.20",
+        "netmask": "24",
+        "status": "down"
+      }
+    ],
+    "hostname": "maulikpuri-ThinkPad-T14s-Gen-1"
+  },
+  "memory_info": {
+    "total_slots": 0,
+    "occupied_slots": 0,
+    "free_slots": 0,
+    "total_ram_size_mb": 0
+  },
+  "scan_errors": [
+    "Memory info: failed to get memory slots: failed to run command: Process exited with status 1"
+  ]
+}
