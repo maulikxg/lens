@@ -1,0 +1,30 @@
+2025/05/04 17:19:34 Starting discovery with target: 192.168.1.18
+2025/05/04 17:19:34 Starting discovery with target: 192.168.1.18
+2025/05/04 17:19:34 Parsed 1 IP addresses to scan
+2025/05/04 17:19:34 Device 192.168.1.18 is reachable
+2025/05/04 17:20:34 Discovery completed. Found 1 devices, 1 reachable
+2025/05/04 17:20:34 Starting to collect detailed information from 1 devices
+2025/05/04 17:20:34 Collecting information from 192.168.1.18 (linux)
+2025/05/04 17:20:34 Collecting information from Linux device 192.168.1.18
+2025/05/04 17:20:34 Successfully connected to 192.168.1.18 with username: roambee-admin
+2025/05/04 17:20:34 Dmidecode not available or requires password on 192.168.1.18, using fallback methods
+2025/05/04 17:20:34 Starting memory info fallback collection for 192.168.1.18
+2025/05/04 17:20:34 Found total RAM: 15730 MB
+2025/05/04 17:20:34 Trying dmidecode without sudo...
+2025/05/04 17:20:34 dmidecode failed or not available: failed to run command: Process exited with status 1
+2025/05/04 17:20:34 Trying sysfs memory info...
+2025/05/04 17:20:34 Sysfs memory info not available: <nil>
+2025/05/04 17:20:34 Trying lscpu...
+2025/05/04 17:20:34 Found CPU model: 12th Gen Intel(R) Core(TM) i7-12700H
+2025/05/04 17:20:34 Trying inxi...
+2025/05/04 17:20:34 inxi not available: failed to run command: Process exited with status 127
+2025/05/04 17:20:34 Trying lshw...
+2025/05/04 17:20:36 Using lshw for memory slot information on 192.168.1.18
+2025/05/04 17:20:36 Found memory banks section in lshw output
+2025/05/04 17:20:36 Found general memory type: System memory
+2025/05/04 17:20:36 Using memory size heuristics for 192.168.1.18 with total RAM: 15730 MB
+2025/05/04 17:20:36 Guessed memory type from CPU: DDR5
+2025/05/04 17:20:36 Guessing 2 equal slots of 7865 MB each
+2025/05/04 17:20:36 Created 2 memory slots based on heuristics
+2025/05/04 17:20:36 Memory info collection complete. Found 2 slots with total 15730 MB RAM
+2025/05/04 17:20:36 Information collection completed for 1 devices

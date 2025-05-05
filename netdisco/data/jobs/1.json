@@ -1,0 +1,64 @@
+{
+  "id": "1",
+  "profile_id": "1",
+  "status": "completed",
+  "targets_total": 1,
+  "targets_completed": 1,
+  "targets_successful": 1,
+  "targets_failed": 0,
+  "started_at": "2025-05-04T17:04:31.82363233+05:30",
+  "completed_at": "2025-05-04T17:04:35.175500263+05:30",
+  "results": [
+    {
+      "ip": "192.168.1.20",
+      "hostname": "maulikpuri-ThinkPad-T14s-Gen-1",
+      "mac": "90:cc:df:b2:72:49",
+      "device_type": "linux",
+      "reachable": true,
+      "open_ports": [
+        22
+      ],
+      "last_scan": "2025-05-04T17:04:31.824305549+05:30",
+      "os_info": {
+        "name": "Ubuntu",
+        "version": "20.04.6 LTS (Focal Fossa)",
+        "distribution": "ubuntu",
+        "kernel": "5.15.0-136-generic",
+        "architecture": "x86_64"
+      },
+      "hardware_info": {
+        "cpu_model": "Intel(R) Core(TM) i7-10610U CPU @ 1.80GHz",
+        "cpu_cores": 8,
+        "total_ram_mb": 15616,
+        "total_disk_space_gb": 234,
+        "free_disk_space_gb": 171
+      },
+      "network_info": {
+        "interfaces": [
+          {
+            "name": "wlp0s20f3",
+            "mac": "90:cc:df:b2:72:49",
+            "ip": "192.168.1.20",
+            "netmask": "24",
+            "status": "down"
+          }
+        ],
+        "hostname": "maulikpuri-ThinkPad-T14s-Gen-1"
+      },
+      "memory_info": {
+        "total_slots": 1,
+        "occupied_slots": 1,
+        "free_slots": 0,
+        "total_ram_size_mb": 15616,
+        "slots": [
+          {
+            "slot_id": "TOTAL",
+            "size_mb": 15616,
+            "type": "Unknown",
+            "occupied": true
+          }
+        ]
+      }
+    }
+  ]
+}

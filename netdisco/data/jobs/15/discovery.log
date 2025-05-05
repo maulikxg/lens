@@ -1,0 +1,20 @@
+2025/05/05 13:07:37 Starting discovery with target: 10.20.40.104
+2025/05/05 13:07:37 Starting discovery with target: 10.20.40.104
+2025/05/05 13:07:37 Parsed 1 IP addresses to scan
+2025/05/05 13:07:37 Device 10.20.40.104 is reachable
+2025/05/05 13:07:37 Discovery completed. Found 1 devices, 1 reachable
+2025/05/05 13:07:37 Starting to collect detailed information from 1 devices
+2025/05/05 13:07:37 Collecting information from 10.20.40.104 (linux)
+2025/05/05 13:07:37 Collecting information from Linux device 10.20.40.104
+2025/05/05 13:07:40 Authentication failed with username 'harekrushn', trying common alternatives
+2025/05/05 13:07:40 Trying username: harekrushn
+2025/05/05 13:07:42 Trying username: admin
+2025/05/05 13:07:44 Trying username: root
+2025/05/05 13:07:47 Trying username: administrator
+2025/05/05 13:07:50 Trying username: ubuntu
+2025/05/05 13:07:53 Trying username: ec2-user
+2025/05/05 13:07:56 Trying username: centos
+2025/05/05 13:08:00 Trying username: debian
+2025/05/05 13:08:02 Trying username: pi
+2025/05/05 13:08:06 Failed to collect information from device 10.20.40.104: failed with all usernames: failed to connect to SSH server: ssh: handshake failed: ssh: unable to authenticate, attempted methods [none password], no supported methods remain
+2025/05/05 13:08:06 Information collection completed for 1 devices

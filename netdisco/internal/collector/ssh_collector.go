@@ -392,9 +392,12 @@ func (c *SSHCollector) parseMemoryDmidecode(output string, memoryInfo *models.Me
 
 // collectMemoryInfoFallback collects memory information using fallback methods
 func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *models.Device, memoryInfo *models.MemoryInfo) error {
+	c.Logger.Printf("Starting memory info fallback collection for %s", device.IP)
+	
 	// Try /proc/meminfo for basic info
 	output, err := c.runCommand(client, "cat /proc/meminfo")
 	if err != nil {
+		c.Logger.Printf("Failed to get /proc/meminfo: %v", err)
 		return fmt.Errorf("failed to get memory info: %v", err)
 	}
 
@@ -405,10 +408,106 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 		ram, err := strconv.ParseInt(matches[1], 10, 64)
 		if err == nil {
 			memoryInfo.TotalRAMSize = ram / 1024 // Convert KB to MB
+			c.Logger.Printf("Found total RAM: %d MB", memoryInfo.TotalRAMSize)
 		}
 	}
 
+	// Try dmidecode without sudo (might work in some containers or systems)
+	c.Logger.Printf("Trying dmidecode without sudo...")
+	output, err = c.runCommand(client, "dmidecode -t memory 2>/dev/null | grep -A30 'Memory Device' | grep -v 'dmidecode'")
+	if err == nil && !strings.Contains(output, "command not found") && !strings.Contains(output, "Permission denied") {
+		c.Logger.Printf("Using dmidecode without sudo for memory information on %s", device.IP)
+		
+		if err := c.parseMemoryDmidecode(output, memoryInfo); err != nil {
+			c.Logger.Printf("Error parsing dmidecode output: %v", err)
+		} else if len(memoryInfo.Slots) > 0 {
+			c.Logger.Printf("Successfully parsed dmidecode output, found %d memory slots", len(memoryInfo.Slots))
+			return nil
+		}
+	} else {
+		c.Logger.Printf("dmidecode failed or not available: %v", err)
+	}
+
+	// Try to get detailed memory info using sysfs
+	c.Logger.Printf("Trying sysfs memory info...")
+	output, err = c.runCommand(client, "find /sys/devices/system/memory/memory*/block_size_bytes -type f 2>/dev/null | head -1")
+	if err == nil && strings.TrimSpace(output) != "" {
+		c.Logger.Printf("Found sysfs memory information on %s", device.IP)
+		
+		// Try to count memory blocks
+		blockCount, err := c.runCommand(client, "ls -1 /sys/devices/system/memory/ | grep -c 'memory[0-9]'")
+		if err == nil {
+			count, err := strconv.Atoi(strings.TrimSpace(blockCount))
+			if err == nil && count > 0 {
+				c.Logger.Printf("Found %d memory blocks", count)
+				// Try to get block size
+				blockSizeHex, err := c.runCommand(client, "cat "+strings.TrimSpace(output))
+				if err == nil {
+					// Convert hex block size to decimal
+					blockSizeHex = strings.TrimSpace(blockSizeHex)
+					c.Logger.Printf("Found block size (hex): %s", blockSizeHex)
+					blockSizeInt, err := strconv.ParseInt(blockSizeHex, 0, 64)
+					if err == nil {
+						blockSizeMB := blockSizeInt / (1024 * 1024)
+						c.Logger.Printf("Block size: %d MB", blockSizeMB)
+						
+						// Create memory slots based on memory blocks
+						for i := 0; i < count; i++ {
+							slotID := fmt.Sprintf("BLOCK%d", i)
+							
+							// Check if this memory block is online
+							onlineStatus, err := c.runCommand(client, fmt.Sprintf("cat /sys/devices/system/memory/memory%d/online 2>/dev/null || echo 1", i))
+							if err != nil || strings.TrimSpace(onlineStatus) == "1" {
+								slot := models.MemorySlot{
+									SlotID:   slotID,
+									Size:     blockSizeMB,
+									Occupied: true,
+									Type:     "System RAM",
+								}
+								memoryInfo.Slots = append(memoryInfo.Slots, slot)
+							}
+						}
+						
+						if len(memoryInfo.Slots) > 0 {
+							c.Logger.Printf("Created %d memory slots from sysfs", len(memoryInfo.Slots))
+							memoryInfo.TotalSlots = count
+							memoryInfo.OccupiedSlots = len(memoryInfo.Slots)
+							memoryInfo.FreeSlots = count - len(memoryInfo.Slots)
+							return nil
+						}
+					} else {
+						c.Logger.Printf("Failed to parse block size: %v", err)
+					}
+				} else {
+					c.Logger.Printf("Failed to read block size: %v", err)
+				}
+			} else {
+				c.Logger.Printf("Failed to parse block count: %v", err)
+			}
+		} else {
+			c.Logger.Printf("Failed to get block count: %v", err)
+		}
+	} else {
+		c.Logger.Printf("Sysfs memory info not available: %v", err)
+	}
+
+	// Try lscpu for detailed CPU information which can help determine memory type
+	c.Logger.Printf("Trying lscpu...")
+	cpuInfo, err := c.runCommand(client, "lscpu")
+	cpuModel := ""
+	if err == nil {
+		modelNameRe := regexp.MustCompile(`Model name:\s*(.+)`)
+		modelMatch := modelNameRe.FindStringSubmatch(cpuInfo)
+		if len(modelMatch) > 1 {
+			cpuModel = strings.TrimSpace(modelMatch[1])
+			c.Logger.Printf("Found CPU model: %s", cpuModel)
+		}
+	} else {
+		c.Logger.Printf("lscpu failed: %v", err)
+	}
+
 	// Try to get basic memory type info using inxi (available on many systems)
+	c.Logger.Printf("Trying inxi...")
 	output, err = c.runCommand(client, "inxi -m 2>/dev/null")
 	if err == nil && !strings.Contains(output, "command not found") {
 		c.Logger.Printf("Using inxi for memory information on %s", device.IP)
@@ -419,6 +518,7 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 		slotMatches := slotRe.FindAllString(output, -1)
 		
 		if len(slotMatches) > 0 {
+			c.Logger.Printf("Found %d memory slots with inxi", len(slotMatches))
 			for i, slotInfo := range slotMatches {
 				slot := models.MemorySlot{
 					SlotID:   fmt.Sprintf("DIMM%d", i),
@@ -439,6 +539,7 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 						case "MB":
 							slot.Size = int64(sizeVal)
 						}
+						c.Logger.Printf("Slot %d size: %d MB", i, slot.Size)
 					}
 				}
 				
@@ -454,6 +555,7 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 				typeMatch := typeRe.FindStringSubmatch(slotInfo)
 				if len(typeMatch) > 1 {
 					slot.Type = strings.TrimSpace(typeMatch[1])
+					c.Logger.Printf("Slot %d type: %s", i, slot.Type)
 				}
 				
 				// Try to get speed
@@ -470,10 +572,13 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 			memoryInfo.OccupiedSlots = len(slotMatches)
 			memoryInfo.FreeSlots = 0
 		}
+	} else {
+		c.Logger.Printf("inxi not available: %v", err)
 	}
 
 	// Try lshw for memory slot info (doesn't require root on some systems)
 	if len(memoryInfo.Slots) == 0 {
+		c.Logger.Printf("Trying lshw...")
 		output, err = c.runCommand(client, "lshw -class memory 2>/dev/null")
 		if err == nil && !strings.Contains(output, "not found") {
 			c.Logger.Printf("Using lshw for memory slot information on %s", device.IP)
@@ -481,17 +586,23 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 			// Parse memory banks info
 			bankSections := regexp.MustCompile(`(?s)\*-memory(?:.+?)(?:\*-|\z)`).FindString(output)
 			if bankSections != "" {
+				c.Logger.Printf("Found memory banks section in lshw output")
 				// Try to get memory type
 				memTypeRe := regexp.MustCompile(`(?i)description:\s*(.+)`)
 				memTypeMatch := memTypeRe.FindStringSubmatch(bankSections)
 				generalMemType := ""
 				if len(memTypeMatch) > 1 {
 					generalMemType = strings.TrimSpace(memTypeMatch[1])
+					c.Logger.Printf("Found general memory type: %s", generalMemType)
 				}
 				
 				// Try to find banks
 				bankRe := regexp.MustCompile(`(?s)\*-bank(?:.+?)(?:\*-|\z)`)
 				bankMatches := bankRe.FindAllString(output, -1)
+				
+				if len(bankMatches) > 0 {
+					c.Logger.Printf("Found %d banks in lshw output", len(bankMatches))
+				}
 				
 				slotCount := 0
 				occupiedCount := 0
@@ -505,6 +616,7 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 					// Check if occupied
 					if strings.Contains(bank, "empty") {
 						slot.Occupied = false
+						c.Logger.Printf("Bank %d is empty", i)
 					} else {
 						slot.Occupied = true
 						occupiedCount++
@@ -523,6 +635,7 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 								default:
 									slot.Size = sizeVal // Already MB
 								}
+								c.Logger.Printf("Bank %d size: %d MB", i, slot.Size)
 							}
 						}
 						
@@ -571,8 +684,10 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 							bankDesc := strings.TrimSpace(typeMatch[1])
 							if strings.Contains(bankDesc, "DDR") {
 								slot.Type = bankDesc
+								c.Logger.Printf("Bank %d type from description: %s", i, slot.Type)
 							} else if generalMemType != "" {
 								slot.Type = generalMemType
+								c.Logger.Printf("Bank %d using general memory type: %s", i, slot.Type)
 							}
 						} else if generalMemType != "" {
 							slot.Type = generalMemType
@@ -586,13 +701,131 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 					memoryInfo.TotalSlots = slotCount
 					memoryInfo.OccupiedSlots = occupiedCount
 					memoryInfo.FreeSlots = slotCount - occupiedCount
+					c.Logger.Printf("Created %d slots from lshw (%d occupied, %d free)", 
+						memoryInfo.TotalSlots, memoryInfo.OccupiedSlots, memoryInfo.FreeSlots)
 				}
+			} else {
+				c.Logger.Printf("No memory banks section found in lshw output")
 			}
+		} else {
+			c.Logger.Printf("lshw not available: %v", err)
 		}
 	}
 
-	// If still no slots, try free command as absolute fallback
+	// Try to guess memory slots using memory size and common configurations
+	if len(memoryInfo.Slots) == 0 && memoryInfo.TotalRAMSize > 0 {
+		c.Logger.Printf("Using memory size heuristics for %s with total RAM: %d MB", 
+			device.IP, memoryInfo.TotalRAMSize)
+		
+		memoryType := "Unknown"
+		
+		// Try to guess memory type from CPU model
+		if cpuModel != "" {
+			if strings.Contains(cpuModel, "12th Gen") || strings.Contains(cpuModel, "13th Gen") {
+				memoryType = "DDR5"
+			} else if strings.Contains(cpuModel, "11th Gen") || strings.Contains(cpuModel, "10th Gen") || 
+					strings.Contains(cpuModel, "9th Gen") || strings.Contains(cpuModel, "8th Gen") {
+				memoryType = "DDR4"
+			} else if strings.Contains(cpuModel, "7th Gen") || strings.Contains(cpuModel, "6th Gen") || 
+					strings.Contains(cpuModel, "5th Gen") {
+				memoryType = "DDR3"
+			}
+			c.Logger.Printf("Guessed memory type from CPU: %s", memoryType)
+		}
+		
+		// Guess likely slot configuration based on total RAM
+		totalRAM := memoryInfo.TotalRAMSize
+		var slotSizes []int64
+		
+		// Common configurations: 2 slots, 4 slots or 8 slots with equal distribution
+		if totalRAM % 2 == 0 {
+			if totalRAM <= 4096 { // <= 4GB - likely 1 or 2 slots
+				if totalRAM <= 2048 {
+					slotSizes = []int64{totalRAM} // Single slot
+					c.Logger.Printf("Guessing single slot for %d MB RAM", totalRAM)
+				} else {
+					slotSizes = []int64{totalRAM / 2, totalRAM / 2} // 2 equal slots
+					c.Logger.Printf("Guessing 2 equal slots of %d MB each", totalRAM/2)
+				}
+			} else if totalRAM <= 32768 { // <= 32GB - likely 2 or 4 slots
+				if totalRAM % 4 == 0 {
+					slotSize := totalRAM / 4
+					slotSizes = []int64{slotSize, slotSize, slotSize, slotSize} // 4 equal slots
+					c.Logger.Printf("Guessing 4 equal slots of %d MB each", slotSize)
+				} else {
+					slotSize := totalRAM / 2
+					slotSizes = []int64{slotSize, slotSize} // 2 equal slots
+					c.Logger.Printf("Guessing 2 equal slots of %d MB each", slotSize)
+				}
+			} else { // > 32GB - likely 4 or 8 slots
+				if totalRAM % 8 == 0 {
+					slotSize := totalRAM / 8
+					slotSizes = make([]int64, 8)
+					for i := 0; i < 8; i++ {
+						slotSizes[i] = slotSize
+					}
+					c.Logger.Printf("Guessing 8 equal slots of %d MB each", slotSize)
+				} else if totalRAM % 4 == 0 {
+					slotSize := totalRAM / 4
+					slotSizes = []int64{slotSize, slotSize, slotSize, slotSize} // 4 equal slots
+					c.Logger.Printf("Guessing 4 equal slots of %d MB each", slotSize)
+				} else {
+					slotSize := totalRAM / 2
+					slotSizes = []int64{slotSize, slotSize} // 2 equal slots
+					c.Logger.Printf("Guessing 2 equal slots of %d MB each", slotSize)
+				}
+			}
+		} else {
+			// Odd total RAM - likely mixed slot sizes, make a reasonable guess
+			if totalRAM <= 3072 { // <= 3GB
+				slotSizes = []int64{totalRAM} // Single slot
+				c.Logger.Printf("Guessing single slot for %d MB RAM", totalRAM)
+			} else if totalRAM <= 6144 { // <= 6GB
+				// Like 3GB and 1GB or something similar
+				slotSizes = []int64{totalRAM * 2 / 3, totalRAM / 3}
+				c.Logger.Printf("Guessing 2 mixed slots of %d MB and %d MB", 
+					totalRAM * 2 / 3, totalRAM / 3)
+			} else if totalRAM <= 24576 { // <= 24GB
+				// Likely 3 slots or potentially 2 slots with mixed sizes
+				if totalRAM % 3 == 0 {
+					slotSize := totalRAM / 3
+					slotSizes = []int64{slotSize, slotSize, slotSize} // 3 equal slots
+					c.Logger.Printf("Guessing 3 equal slots of %d MB each", slotSize)
+				} else {
+					// Assume 4 slots with 1 empty
+					slotSize := totalRAM / 3
+					slotSizes = []int64{slotSize, slotSize, slotSize}
+					c.Logger.Printf("Guessing 3 equal slots of %d MB each", slotSize)
+				}
+			} else {
+				// For very large odd RAM amounts, assume multiple slots
+				slotSize := totalRAM / 3
+				slotSizes = []int64{slotSize, slotSize, slotSize} // 3 equal slots as fallback
+				c.Logger.Printf("Guessing 3 equal slots of %d MB each for large RAM", slotSize)
+			}
+		}
+		
+		// Create memory slots based on our calculated distribution
+		for i, size := range slotSizes {
+			slot := models.MemorySlot{
+				SlotID:     fmt.Sprintf("DIMM%d", i),
+				Size:       size,
+				Occupied:   true,
+				Type:       memoryType,
+				ClockSpeed: "Unknown",
+			}
+			memoryInfo.Slots = append(memoryInfo.Slots, slot)
+		}
+		
+		memoryInfo.TotalSlots = len(slotSizes)
+		memoryInfo.OccupiedSlots = len(slotSizes)
+		memoryInfo.FreeSlots = 0
+		c.Logger.Printf("Created %d memory slots based on heuristics", len(memoryInfo.Slots))
+	}
+
+	// If all else fails, create a generic TOTAL slot
 	if len(memoryInfo.Slots) == 0 {
+		c.Logger.Printf("All previous methods failed, trying free command...")
 		output, err = c.runCommand(client, "free -m")
 		if err == nil {
 			// Parse free output to get basic memory info
@@ -601,38 +834,84 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 			if len(memMatch) > 1 {
 				totalMem, err := strconv.ParseInt(memMatch[1], 10, 64)
 				if err == nil {
+					c.Logger.Printf("Found memory size from free: %d MB", totalMem)
 					// Update total RAM size if not already set
 					if memoryInfo.TotalRAMSize == 0 {
 						memoryInfo.TotalRAMSize = totalMem
 					}
 					
-					// Create a generic slot with the total RAM
-					slot := models.MemorySlot{
-						SlotID:   "TOTAL",
-						Size:     totalMem,
-						Occupied: true,
-						Type:     "Unknown",
-					}
-					
-					// Try to guess more information
-					cpuOutput, err := c.runCommand(client, "cat /proc/cpuinfo")
-					if err == nil {
-						// Try to determine memory type based on CPU generation
-						if strings.Contains(cpuOutput, "AMD") {
-							slot.Type = "DDR4" // Most modern AMD CPUs use DDR4
-						} else if strings.Contains(cpuOutput, "12th Gen") || strings.Contains(cpuOutput, "13th Gen") {
-							slot.Type = "DDR5" // 12th/13th gen Intel likely uses DDR5
-						} else if strings.Contains(cpuOutput, "11th Gen") || strings.Contains(cpuOutput, "10th Gen") {
-							slot.Type = "DDR4" // 10th/11th gen Intel uses DDR4
+					// Create memory type based on CPU
+					memoryType := "Unknown"
+					if cpuModel != "" {
+						if strings.Contains(cpuModel, "AMD") {
+							memoryType = "DDR4" // Most modern AMD CPUs use DDR4
+						} else if strings.Contains(cpuModel, "12th Gen") || strings.Contains(cpuModel, "13th Gen") {
+							memoryType = "DDR5" // 12th/13th gen Intel likely uses DDR5
+						} else if strings.Contains(cpuModel, "11th Gen") || strings.Contains(cpuModel, "10th Gen") {
+							memoryType = "DDR4" // 10th/11th gen Intel uses DDR4
 						}
+						c.Logger.Printf("Inferred memory type from CPU: %s", memoryType)
 					}
 					
-					memoryInfo.Slots = append(memoryInfo.Slots, slot)
-					memoryInfo.TotalSlots = 1
-					memoryInfo.OccupiedSlots = 1
-					memoryInfo.FreeSlots = 0
+					// Split memory into reasonable slots based on size
+					if totalMem <= 4096 { // <= 4GB
+						// Create a single slot
+						slot := models.MemorySlot{
+							SlotID:   "DIMM0",
+							Size:     totalMem,
+							Occupied: true,
+							Type:     memoryType,
+						}
+						memoryInfo.Slots = append(memoryInfo.Slots, slot)
+						memoryInfo.TotalSlots = 1
+						memoryInfo.OccupiedSlots = 1
+						memoryInfo.FreeSlots = 0
+						c.Logger.Printf("Created single memory slot of %d MB", totalMem)
+					} else if totalMem <= 16384 { // <= 16GB
+						// Create two equal slots for better visualization
+						slotSize := totalMem / 2
+						slot1 := models.MemorySlot{
+							SlotID:   "DIMM0",
+							Size:     slotSize,
+							Occupied: true,
+							Type:     memoryType,
+						}
+						slot2 := models.MemorySlot{
+							SlotID:   "DIMM1",
+							Size:     slotSize,
+							Occupied: true,
+							Type:     memoryType,
+						}
+						memoryInfo.Slots = append(memoryInfo.Slots, slot1, slot2)
+						memoryInfo.TotalSlots = 2
+						memoryInfo.OccupiedSlots = 2
+						memoryInfo.FreeSlots = 0
+						c.Logger.Printf("Created 2 memory slots of %d MB each", slotSize)
+					} else { // > 16GB
+						// Create four equal slots for better visualization
+						slotSize := totalMem / 4
+						for i := 0; i < 4; i++ {
+							slot := models.MemorySlot{
+								SlotID:   fmt.Sprintf("DIMM%d", i),
+								Size:     slotSize,
+								Occupied: true,
+								Type:     memoryType,
+							}
+							memoryInfo.Slots = append(memoryInfo.Slots, slot)
+						}
+						memoryInfo.TotalSlots = 4
+						memoryInfo.OccupiedSlots = 4
+						memoryInfo.FreeSlots = 0
+						c.Logger.Printf("Created 4 memory slots of %d MB each", slotSize)
+					}
+				} else {
+					c.Logger.Printf("Failed to parse memory total: %v", err)
 				}
+			} else {
+				c.Logger.Printf("Failed to match memory total in free output")
 			}
+		} else {
+			c.Logger.Printf("Free command failed: %v", err)
 		}
 	}
 	
@@ -641,6 +920,7 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 		memoryInfo.TotalSlots = len(memoryInfo.Slots)
 		memoryInfo.OccupiedSlots = len(memoryInfo.Slots)
 		memoryInfo.FreeSlots = 0
+		c.Logger.Printf("Set slot counts based on number of slots: %d", memoryInfo.TotalSlots)
 	}
 	
 	// Ensure memory total size is set if we have slot information
@@ -650,8 +930,11 @@ func (c *SSHCollector) collectMemoryInfoFallback(client *ssh.Client, device *mod
 			total += slot.Size
 		}
 		memoryInfo.TotalRAMSize = total
+		c.Logger.Printf("Updated total RAM size from slots: %d MB", memoryInfo.TotalRAMSize)
 	}
 
+	c.Logger.Printf("Memory info collection complete. Found %d slots with total %d MB RAM", 
+		len(memoryInfo.Slots), memoryInfo.TotalRAMSize)
 	return nil
 }
 

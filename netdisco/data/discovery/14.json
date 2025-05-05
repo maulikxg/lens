@@ -1,0 +1,15 @@
+{
+  "id": "14",
+  "name": "Single IP Scan",
+  "description": "Scan a single IP address",
+  "target_type": "ip",
+  "target": "10.20.40.107",
+  "credential_ids": [
+    "8"
+  ],
+  "concurrency": 10,
+  "timeout": 5,
+  "last_run_at": "2025-05-05T13:39:56.870319822+05:30",
+  "created_at": "2025-05-05T13:21:26.608285624+05:30",
+  "updated_at": "2025-05-05T13:39:56.870320822+05:30"
+}

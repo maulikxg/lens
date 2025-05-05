@@ -1,0 +1,13 @@
+{
+  "cred_counter": 10,
+  "disc_counter": 16,
+  "job_counter": 19,
+  "deleted_ids": {
+    "cred": [
+      "9"
+    ],
+    "disc": [
+      "15"
+    ]
+  }
+}

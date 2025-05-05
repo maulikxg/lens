@@ -1,0 +1,11 @@
+curl -X POST http://localhost:8080/api/credentials -H "Content-Type: application/json" -d '{"name": "Linux Server", "description": "Credentials for Linux servers", "type": "linux", "ssh_username": "harekrushn", "ssh_password
+": "Mind@123", "ssh_port": 22}'
+
+curl -X POST -H "Content-Type: application/json" -d '{"name": "Single IP Scan", "description": "Scan a single IP address", "target_type": "ip", "target": "10.20.40.107", "credential_ids": ["8"], "concurrency": 10, "timeout":
+ 5}' http://localhost:8080/api/discovery
+
+
+ curl -X POST http://localhost:8080/api/discovery/14/run
+
+
+ sleep 5 && curl http://localhost:8080/api/jobs/16

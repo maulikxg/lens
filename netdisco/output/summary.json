@@ -1,75 +1,41 @@
 {
   "total_devices": 1,
-  "reachable_devices": 1,
-  "linux_devices": 1,
+  "reachable_devices": 0,
+  "linux_devices": 0,
   "windows_devices": 0,
-  "unknown_devices": 0,
+  "unknown_devices": 1,
   "devices": [
     {
-      "ip": "192.168.1.18",
-      "hostname": "roambee-admin-Lenovo-Legion-S7-16IAH7",
-      "mac": "4c:03:4f:b9:da:5c",
-      "device_type": "linux",
-      "reachable": true,
-      "open_ports": [
-        22
-      ],
-      "last_scan": "2025-05-04T16:27:20.534129052+05:30",
+      "ip": "10.20.40.103",
+      "hostname": "",
+      "mac": "",
+      "device_type": "unknown",
+      "reachable": false,
+      "open_ports": null,
+      "last_scan": "2025-05-05T11:33:35.991208638+05:30",
       "os_info": {
-        "name": "Ubuntu",
-        "version": "24.04.2 LTS (Noble Numbat)",
-        "distribution": "ubuntu",
-        "kernel": "6.11.0-21-generic",
-        "architecture": "x86_64"
+        "name": "",
+        "version": "",
+        "architecture": ""
       },
       "hardware_info": {
-        "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700H",
-        "cpu_cores": 20,
-        "total_ram_mb": 15730,
-        "total_disk_space_gb": 937,
-        "free_disk_space_gb": 832
+        "cpu_model": "",
+        "cpu_cores": 0,
+        "total_ram_mb": 0,
+        "total_disk_space_gb": 0,
+        "free_disk_space_gb": 0
       },
       "network_info": {
-        "interfaces": [
-          {
-            "name": "wlp0s20f3",
-            "mac": "4c:03:4f:b9:da:5c",
-            "ip": "192.168.1.18",
-            "netmask": "24",
-            "status": "down"
-          },
-          {
-            "name": "docker0",
-            "mac": "02:42:cd:6f:08:6b",
-            "ip": "172.17.0.1",
-            "netmask": "16",
-            "status": "down"
-          },
-          {
-            "name": "br-a7627477cc82",
-            "mac": "02:42:55:d8:71:61",
-            "ip": "172.20.0.1",
-            "netmask": "16",
-            "status": "down"
-          }
-        ],
-        "hostname": "roambee-admin-Lenovo-Legion-S7-16IAH7"
+        "interfaces": null,
+        "hostname": ""
       },
       "memory_info": {
-        "total_slots": 1,
-        "occupied_slots": 1,
+        "total_slots": 0,
+        "occupied_slots": 0,
         "free_slots": 0,
-        "total_ram_size_mb": 15730,
-        "slots": [
-          {
-            "slot_id": "TOTAL",
-            "size_mb": 15730,
-            "type": "DDR5",
-            "occupied": true
-          }
-        ]
+        "total_ram_size_mb": 0
       }
     }
   ],
-  "timestamp": "2025-05-04T16:27:42+05:30"
+  "timestamp": "2025-05-05T11:34:36+05:30"
 }
