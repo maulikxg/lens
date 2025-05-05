@@ -1,0 +1,86 @@
+{
+  "id": "19",
+  "profile_id": "15",
+  "status": "completed",
+  "targets_total": 1,
+  "targets_completed": 1,
+  "targets_successful": 1,
+  "targets_failed": 0,
+  "started_at": "2025-05-05T15:25:49.369502156+05:30",
+  "completed_at": "2025-05-05T15:26:13.095563652+05:30",
+  "results": [
+    {
+      "ip": "10.20.40.107",
+      "hostname": "harekrushn-ThinkPad-T14s-Gen-1",
+      "mac": "fc:44:82:dc:97:f4",
+      "device_type": "linux",
+      "reachable": true,
+      "open_ports": [
+        22
+      ],
+      "last_scan": "2025-05-05T15:25:49.371026716+05:30",
+      "os_info": {
+        "name": "Ubuntu",
+        "version": "20.04.6 LTS (Focal Fossa)",
+        "distribution": "ubuntu",
+        "kernel": "5.15.0-138-generic",
+        "architecture": "x86_64"
+      },
+      "hardware_info": {
+        "cpu_model": "Intel(R) Core(TM) i7-10610U CPU @ 1.80GHz",
+        "cpu_cores": 8,
+        "total_ram_mb": 15616,
+        "total_disk_space_gb": 234,
+        "free_disk_space_gb": 173
+      },
+      "network_info": {
+        "interfaces": [
+          {
+            "name": "wlp0s20f3",
+            "mac": "fc:44:82:dc:97:f4",
+            "ip": "10.20.40.107",
+            "netmask": "22",
+            "status": "down"
+          }
+        ],
+        "hostname": "harekrushn-ThinkPad-T14s-Gen-1"
+      },
+      "memory_info": {
+        "total_slots": 4,
+        "occupied_slots": 4,
+        "free_slots": 0,
+        "total_ram_size_mb": 15616,
+        "slots": [
+          {
+            "slot_id": "DIMM0",
+            "size_mb": 3904,
+            "type": "Unknown",
+            "clock_speed": "Unknown",
+            "occupied": true
+          },
+          {
+            "slot_id": "DIMM1",
+            "size_mb": 3904,
+            "type": "Unknown",
+            "clock_speed": "Unknown",
+            "occupied": true
+          },
+          {
+            "slot_id": "DIMM2",
+            "size_mb": 3904,
+            "type": "Unknown",
+            "clock_speed": "Unknown",
+            "occupied": true
+          },
+          {
+            "slot_id": "DIMM3",
+            "size_mb": 3904,
+            "type": "Unknown",
+            "clock_speed": "Unknown",
+            "occupied": true
+          }
+        ]
+      }
+    }
+  ]
+}

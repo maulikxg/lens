@@ -8,4 +8,4 @@ curl -X POST -H "Content-Type: application/json" -d '{"name": "Single IP Scan", 
  curl -X POST http://localhost:8080/api/discovery/14/run
 
 
- sleep 5 && curl http://localhost:8080/api/jobs/16
+ sleep 50 && curl http://localhost:8080/api/jobs/16

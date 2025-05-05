@@ -2,20 +2,20 @@
 start := cd netdisco && ./netdisco api --host 0.0.0.0 --port 8080 --verbose
 
 
-curl -X POST http://localhost:8080/api/credentials -H "Content-Type: application/json" -d '{"name": "Linux Server", "description": "Credentials for Linux servers", "type": "linux", "ssh_username": "admin", "ssh_password": "password", "ssh_port": 22}'
+curl -X POST http://localhost:8080/api/credentials -H "Content-Type: application/json" -d '{"name": "Linux Server", "description": "Credentials for Linux servers", "type": "linux", "ssh_username": "harekrushn", "ssh_password": "Mind@123", "ssh_port": 22}'
 
 
-curl -X POST -H "Content-Type: application/json" -d '{"name": "Single IP Scan", "description": "Scan a single IP address", "target_type": "ip", "target": "127.0.0.1", "credential_ids": ["5"], "concurrency": 1, "timeout": 5}' http://localhost:8080/api/discovery
+curl -X POST -H "Content-Type: application/json" -d '{"name": "Single IP Scan", "description": "Scan a single IP address", "target_type": "ip", "target": "10.20.40.107", "credential_ids": ["5"], "concurrency": 1, "timeout": 5}' http://localhost:8080/api/discovery
 
-curl -X POST http://localhost:8080/api/discovery/5/run
+curl -X POST http://localhost:8080/api/discovery/15/run
+
+sleep 50 && curl http://localhost:8080/api/jobs/19
 
 curl http://localhost:8080/api/jobs/4
 
+-----------------------------------------------------------------------
 
-sleep 5 && curl http://localhost:8080/api/jobs/4
-
-
-curl -X DELETE http://localhost:8080/api/credentials/4
+curl -X DELETE http://localhost:8080/api/credentials/9
 
 curl -X DELETE http://localhost:8080/api/discovery/5
 
