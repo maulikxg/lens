@@ -1,8 +1,11 @@
-2025/05/05 11:33:35 NetDisco starting with target: 10.20.40.103
-2025/05/05 11:33:35 SSH credentials provided for Linux systems (username: dhyanesh)
-2025/05/05 11:33:35 Starting discovery with target: 10.20.40.103
-2025/05/05 11:33:35 Parsed 1 IP addresses to scan
-2025/05/05 11:34:36 Device 10.20.40.103 is not reachable
-2025/05/05 11:34:36 Discovery completed. Found 1 devices, 0 reachable
-2025/05/05 11:34:36 Starting to collect detailed information from 1 devices
-2025/05/05 11:34:36 Information collection completed for 1 devices
+2025/05/07 11:06:46 NetDisco starting with target: 172.16.8.128
+2025/05/07 11:06:46 WinRM credentials provided for Windows systems (username: Administrator)
+2025/05/07 11:06:46 Starting discovery with target: 172.16.8.128
+2025/05/07 11:06:46 Parsed 1 IP addresses to scan
+2025/05/07 11:06:46 Device 172.16.8.128 is reachable
+2025/05/07 11:06:46 Discovery completed. Found 1 devices, 1 reachable
+2025/05/07 11:06:46 Starting to collect detailed information from 1 devices
+2025/05/07 11:06:46 Collecting information from 172.16.8.128 (windows)
+2025/05/07 11:06:46 Collecting information from Windows device 172.16.8.128
+2025/05/07 11:06:47 Windows version check: 
+Microsoft Windows [Version 10.0.14393]

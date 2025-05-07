@@ -1,0 +1,45 @@
+{
+  "ip": "172.16.10.132",
+  "hostname": "",
+  "mac": "",
+  "device_type": "linux",
+  "reachable": true,
+  "open_ports": [
+    22,
+    80,
+    3389,
+    5985
+  ],
+  "last_scan": "2025-05-06T10:19:56.67513149+05:30",
+  "os_info": {
+    "name": "",
+    "version": "",
+    "architecture": ""
+  },
+  "hardware_info": {
+    "cpu_model": "",
+    "cpu_cores": 0,
+    "total_ram_mb": 0,
+    "total_disk_space_gb": 0,
+    "free_disk_space_gb": 0
+  },
+  "network_info": {
+    "interfaces": null,
+    "hostname": ""
+  },
+  "memory_info": {
+    "total_slots": 0,
+    "occupied_slots": 0,
+    "free_slots": 0,
+    "total_ram_size_mb": 0
+  },
+  "windows_info": {
+    "install_date": "0001-01-01T00:00:00Z",
+    "last_boot_time": "0001-01-01T00:00:00Z",
+    "pending_reboot": false,
+    "last_windows_update": "0001-01-01T00:00:00Z"
+  },
+  "scan_errors": [
+    "Collector error: SSH credentials are required for Linux devices"
+  ]
+}

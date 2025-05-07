@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/masterzen/winrm"
 	"github.com/netdisco/netdisco/internal/models"
@@ -33,22 +34,43 @@ func (c *WinRMCollector) Collect(device *models.Device) error {
 
 	c.Logger.Printf("Collecting information from Windows device %s", device.IP)
 
-	// Create WinRM client
+	// Create WinRM client with improved configuration
 	endpoint := winrm.NewEndpoint(
 		device.IP,
 		c.Config.WinRMConfig.Port,
-		false, // use HTTPS
-		true,  // skip SSL verification
-		nil,   // CA certificate
-		nil,   // client certificate
-		nil,   // client key
-		0,     // timeout
+		c.Config.WinRMConfig.UseHTTPS, // Use HTTPS if configured
+		true,                          // skip SSL verification
+		nil,                           // CA certificate
+		nil,                           // client certificate
+		nil,                           // client key
+		time.Duration(c.Config.Timeout) * time.Second, // timeout in seconds
 	)
 
-	client, err := winrm.NewClient(endpoint, c.Config.WinRMConfig.Username, c.Config.WinRMConfig.Password)
+	params := winrm.DefaultParameters
+	params.Timeout = fmt.Sprintf("PT%dS", c.Config.Timeout)
+	
+	client, err := winrm.NewClientWithParameters(
+		endpoint, 
+		c.Config.WinRMConfig.Username, 
+		c.Config.WinRMConfig.Password,
+		params,
+	)
+	
 	if err != nil {
 		return fmt.Errorf("failed to create WinRM client: %v", err)
 	}
+
+	// Verify connection
+	if err := c.verifyConnection(client); err != nil {
+		return fmt.Errorf("WinRM connection verification failed: %v", err)
+	}
+
+	// Check if this is really a Windows system with a simple command
+	output, err := c.runCommand(client, "ver")
+	if err != nil {
+		return fmt.Errorf("failed to run Windows version command: %v", err)
+	}
+	c.Logger.Printf("Windows version check: %s", output)
 
 	// Collect OS information
 	if err := c.collectOSInfo(client, device); err != nil {
@@ -69,53 +91,79 @@ func (c *WinRMCollector) Collect(device *models.Device) error {
 	if err := c.collectMemoryInfo(client, device); err != nil {
 		device.ScanErrors = append(device.ScanErrors, fmt.Sprintf("Memory info: %v", err))
 	}
+	
+	return nil
+}
 
+// verifyConnection checks if the WinRM connection is working properly
+func (c *WinRMCollector) verifyConnection(client *winrm.Client) error {
+	_, err := c.runCommand(client, "hostname")
+	if err != nil {
+		return fmt.Errorf("connection test failed: %v", err)
+	}
+	return nil
+}
+
+// verifyOSType confirms that the device is running Windows
+func (c *WinRMCollector) verifyOSType(client *winrm.Client, device *models.Device) error {
+	// Try to run a Windows-specific command
+	output, err := c.runPowerShell(client, "Get-WmiObject Win32_OperatingSystem | Select-Object Caption")
+	if err != nil {
+		return fmt.Errorf("failed to verify OS type: %v", err)
+	}
+
+	// Check if the output contains Windows
+	if !strings.Contains(strings.ToLower(output), "windows") {
+		// If the verification fails, update the device type
+		device.DeviceType = models.DeviceTypeUnknown
+		return fmt.Errorf("device does not appear to be running Windows")
+	}
+	
 	return nil
 }
 
 // collectOSInfo collects operating system information
 func (c *WinRMCollector) collectOSInfo(client *winrm.Client, device *models.Device) error {
-	// Get OS information using PowerShell
-	command := "Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber, OSArchitecture"
-	output, err := c.runPowerShell(client, command)
-	if err != nil {
-		return fmt.Errorf("failed to get OS information: %v", err)
-	}
-
+	// Get OS information using simple PowerShell commands
 	osInfo := models.OSInfo{}
 
-	// Parse OS information
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "Caption") {
-			continue // Skip header line
-		}
-		if strings.Contains(line, ":") {
-			parts := strings.SplitN(line, ":", 2)
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-			switch key {
-			case "Caption":
-				osInfo.Name = value
-				osInfo.Distribution = "windows"
-			case "Version":
-				osInfo.Version = value
-			case "OSArchitecture":
-				osInfo.Architecture = value
-			}
+	// Get OS name
+	command := "systeminfo | findstr /B /C:\"OS Name\""
+	output, err := c.runCommand(client, command)
+	if err != nil {
+		return fmt.Errorf("failed to get OS name: %v", err)
+	}
+	if strings.Contains(output, ":") {
+		parts := strings.SplitN(output, ":", 2)
+		if len(parts) == 2 {
+			osInfo.Name = strings.TrimSpace(parts[1])
+			osInfo.Distribution = "windows"
 		}
 	}
-
-	// Get kernel information (Windows doesn't really have a "kernel version" like Linux)
-	// Using BuildNumber as a substitute
-	command = "Get-CimInstance Win32_OperatingSystem | Select-Object BuildNumber"
-	output, err = c.runPowerShell(client, command)
-	if err == nil {
-		re := regexp.MustCompile(`BuildNumber\s*:\s*(.+)`)
-		matches := re.FindStringSubmatch(output)
-		if len(matches) > 1 {
-			osInfo.Kernel = strings.TrimSpace(matches[1])
+	
+	// Get OS version
+	command = "systeminfo | findstr /B /C:\"OS Version\""
+	output, err = c.runCommand(client, command)
+	if err != nil {
+		return fmt.Errorf("failed to get OS version: %v", err)
+	}
+	if strings.Contains(output, ":") {
+		parts := strings.SplitN(output, ":", 2)
+		if len(parts) == 2 {
+			osInfo.Version = strings.TrimSpace(parts[1])
+		}
+	}
+	
+	// Get system architecture
+	command = "systeminfo | findstr /B /C:\"System Type\""
+	output, err = c.runCommand(client, command)
+	if err != nil {
+		return fmt.Errorf("failed to get system type: %v", err)
+	}
+	if strings.Contains(output, ":") {
+		parts := strings.SplitN(output, ":", 2)
+		if len(parts) == 2 {
+			osInfo.Architecture = strings.TrimSpace(parts[1])
 		}
 	}
 
@@ -127,71 +175,69 @@ func (c *WinRMCollector) collectOSInfo(client *winrm.Client, device *models.Devi
 func (c *WinRMCollector) collectHardwareInfo(client *winrm.Client, device *models.Device) error {
 	hardwareInfo := models.HardwareInfo{}
 
-	// Get CPU model and cores
-	command := "Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores"
-	output, err := c.runPowerShell(client, command)
+	// Get CPU information using system info
+	command := "systeminfo | findstr /B /C:\"Processor(s)\""
+	output, err := c.runCommand(client, command)
 	if err != nil {
 		return fmt.Errorf("failed to get CPU information: %v", err)
 	}
-
-	// Parse CPU information
-	cpuNameRe := regexp.MustCompile(`Name\s*:\s*(.+)`)
-	cpuCoresRe := regexp.MustCompile(`NumberOfCores\s*:\s*(\d+)`)
-
-	cpuNameMatches := cpuNameRe.FindStringSubmatch(output)
-	if len(cpuNameMatches) > 1 {
-		hardwareInfo.CPUModel = strings.TrimSpace(cpuNameMatches[1])
-	}
-
-	cpuCoresMatches := cpuCoresRe.FindStringSubmatch(output)
-	if len(cpuCoresMatches) > 1 {
-		cores, err := strconv.Atoi(strings.TrimSpace(cpuCoresMatches[1]))
+	if strings.Contains(output, ":") {
+		parts := strings.SplitN(output, ":", 2)
+		if len(parts) == 2 {
+			hardwareInfo.CPUModel = strings.TrimSpace(parts[1])
+			// Try to extract CPU cores from the description
+			re := regexp.MustCompile(`(\d+) Processor\(s\) Installed`)
+			matches := re.FindStringSubmatch(output)
+			if len(matches) > 1 {
+				cores, err := strconv.Atoi(matches[1])
 		if err == nil {
 			hardwareInfo.CPUCores = cores
 		}
 	}
-
-	// Get total RAM
-	command = "Get-CimInstance Win32_ComputerSystem | Select-Object TotalPhysicalMemory"
-	output, err = c.runPowerShell(client, command)
-	if err != nil {
-		return fmt.Errorf("failed to get total RAM: %v", err)
-	}
-
-	// Parse RAM information
-	ramRe := regexp.MustCompile(`TotalPhysicalMemory\s*:\s*(\d+)`)
-	ramMatches := ramRe.FindStringSubmatch(output)
-	if len(ramMatches) > 1 {
-		ram, err := strconv.ParseInt(strings.TrimSpace(ramMatches[1]), 10, 64)
-		if err == nil {
-			hardwareInfo.TotalRAM = ram / (1024 * 1024) // Convert bytes to MB
 		}
 	}
 
-	// Get disk space
-	command = "Get-CimInstance Win32_LogicalDisk -Filter 'DeviceID=\"C:\"' | Select-Object Size, FreeSpace"
-	output, err = c.runPowerShell(client, command)
+	// Get RAM information
+	command = "systeminfo | findstr /B /C:\"Total Physical Memory\""
+	output, err = c.runCommand(client, command)
 	if err != nil {
-		return fmt.Errorf("failed to get disk space: %v", err)
+		return fmt.Errorf("failed to get RAM information: %v", err)
 	}
-
-	// Parse disk information
-	sizeRe := regexp.MustCompile(`Size\s*:\s*(\d+)`)
-	freeRe := regexp.MustCompile(`FreeSpace\s*:\s*(\d+)`)
-
-	sizeMatches := sizeRe.FindStringSubmatch(output)
-	if len(sizeMatches) > 1 {
-		size, err := strconv.ParseInt(strings.TrimSpace(sizeMatches[1]), 10, 64)
+	if strings.Contains(output, ":") {
+		parts := strings.SplitN(output, ":", 2)
+		if len(parts) == 2 {
+			memStr := strings.TrimSpace(parts[1])
+			// Extract the numeric portion (typically in MB)
+			re := regexp.MustCompile(`([\d,]+)\s*MB`)
+			matches := re.FindStringSubmatch(memStr)
+			if len(matches) > 1 {
+				// Remove commas from the number
+				numStr := strings.Replace(matches[1], ",", "", -1)
+				ram, err := strconv.ParseInt(numStr, 10, 64)
 		if err == nil {
-			hardwareInfo.TotalDiskSpace = size / (1024 * 1024 * 1024) // Convert bytes to GB
+					hardwareInfo.TotalRAM = ram
+				}
+			}
 		}
 	}
 
-	freeMatches := freeRe.FindStringSubmatch(output)
-	if len(freeMatches) > 1 {
-		free, err := strconv.ParseInt(strings.TrimSpace(freeMatches[1]), 10, 64)
+	// Get disk space information
+	command = "wmic logicaldisk where DeviceID='C:' get Size,FreeSpace"
+	output, err = c.runCommand(client, command)
+	if err == nil {
+		lines := strings.Split(output, "\n")
+		if len(lines) > 1 {
+			parts := strings.Fields(lines[1])
+			if len(parts) >= 2 {
+				freeSpace, err := strconv.ParseInt(parts[0], 10, 64)
+				if err == nil {
+					hardwareInfo.FreeDiskSpace = freeSpace / (1024 * 1024 * 1024) // Convert bytes to GB
+				}
+				totalSize, err := strconv.ParseInt(parts[1], 10, 64)
 		if err == nil {
-			hardwareInfo.FreeDiskSpace = free / (1024 * 1024 * 1024) // Convert bytes to GB
+					hardwareInfo.TotalDiskSpace = totalSize / (1024 * 1024 * 1024) // Convert bytes to GB
+				}
+			}
 		}
 	}
 
@@ -211,179 +257,83 @@ func (c *WinRMCollector) collectNetworkInfo(client *winrm.Client, device *models
 	}
 	networkInfo.Hostname = strings.TrimSpace(output)
 
-	// Get domain name
-	command = "Get-CimInstance Win32_ComputerSystem | Select-Object Domain"
-	output, err = c.runPowerShell(client, command)
-	if err == nil {
-		re := regexp.MustCompile(`Domain\s*:\s*(.+)`)
-		matches := re.FindStringSubmatch(output)
-		if len(matches) > 1 {
-			networkInfo.Domain = strings.TrimSpace(matches[1])
-		}
-	}
-
-	// Get network interfaces
-	command = `Get-CimInstance Win32_NetworkAdapter | Where-Object { $_.NetEnabled -eq $true } | ForEach-Object {
-		$adapter = $_
-		$config = Get-CimInstance Win32_NetworkAdapterConfiguration | Where-Object { $_.Index -eq $adapter.Index }
-		[PSCustomObject]@{
-			Name = $adapter.Name
-			MAC = $adapter.MACAddress
-			IP = $config.IPAddress -join ','
-			Netmask = $config.IPSubnet -join ','
-			Status = $adapter.NetConnectionStatus
-		}
-	} | Format-List`
-	output, err = c.runPowerShell(client, command)
+	// Get IP addresses using ipconfig
+	command = "ipconfig /all"
+	output, err = c.runCommand(client, command)
 	if err != nil {
 		return fmt.Errorf("failed to get network interfaces: %v", err)
 	}
 
-	// Parse network interfaces
-	interfacesRe := regexp.MustCompile(`(?s)Name\s*:\s*(.+?)\nMAC\s*:\s*(.+?)\nIP\s*:\s*(.+?)\nNetmask\s*:\s*(.+?)\nStatus\s*:\s*(\d+)`)
-	matches := interfacesRe.FindAllStringSubmatch(output, -1)
-	for _, match := range matches {
-		if len(match) < 6 {
+	// Parse ipconfig output
+	var interfaces []models.NetworkInterface
+	var currentInterface *models.NetworkInterface
+	
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		
+		// Start of a new interface
+		if strings.Contains(line, "adapter") && strings.HasSuffix(line, ":") {
+			if currentInterface != nil && currentInterface.Name != "" {
+				interfaces = append(interfaces, *currentInterface)
+			}
+			
+			name := strings.TrimSuffix(strings.TrimPrefix(line, "Ethernet adapter "), ":")
+			name = strings.TrimSuffix(strings.TrimPrefix(name, "Wireless LAN adapter "), ":")
+			currentInterface = &models.NetworkInterface{
+				Name: name,
+			}
+		}
+		
+		if currentInterface == nil {
 			continue
 		}
-
-		name := strings.TrimSpace(match[1])
-		mac := strings.TrimSpace(match[2])
-		ips := strings.Split(strings.TrimSpace(match[3]), ",")
-		netmasks := strings.Split(strings.TrimSpace(match[4]), ",")
-		status := "down"
-		if statusVal, err := strconv.Atoi(strings.TrimSpace(match[5])); err == nil && statusVal == 2 {
-			status = "up"
-		}
-
-		// Use the first IP address and netmask
-		ip := ""
-		netmask := ""
-		if len(ips) > 0 {
-			ip = ips[0]
-		}
-		if len(netmasks) > 0 {
-			netmask = netmasks[0]
-		}
-
-		if ip != "" && netmask != "" {
-			networkInterface := models.NetworkInterface{
-				Name:    name,
-				MAC:     mac,
-				IP:      ip,
-				Netmask: netmask,
-				Status:  status,
+		
+		// Extract MAC address
+		if strings.Contains(line, "Physical Address") && strings.Contains(line, ":") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				currentInterface.MAC = strings.TrimSpace(parts[1])
 			}
-			networkInfo.Interfaces = append(networkInfo.Interfaces, networkInterface)
+		}
+		
+		// Extract IP address
+		if strings.Contains(line, "IPv4 Address") && strings.Contains(line, ":") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				// Remove (Preferred) suffix if present
+				ip := strings.TrimSpace(parts[1])
+				ip = strings.Replace(ip, "(Preferred)", "", -1)
+				currentInterface.IP = strings.TrimSpace(ip)
+			}
+		}
+		
+		// Extract subnet mask
+		if strings.Contains(line, "Subnet Mask") && strings.Contains(line, ":") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 {
+				currentInterface.Netmask = strings.TrimSpace(parts[1])
+			}
 		}
 	}
-
+	
+	// Add the last interface if it exists
+	if currentInterface != nil && currentInterface.Name != "" {
+		interfaces = append(interfaces, *currentInterface)
+	}
+	
+	networkInfo.Interfaces = interfaces
 	device.NetworkInfo = networkInfo
 	return nil
 }
 
-// collectMemoryInfo collects detailed memory information
+// collectMemoryInfo collects memory information
 func (c *WinRMCollector) collectMemoryInfo(client *winrm.Client, device *models.Device) error {
-	memoryInfo := models.MemoryInfo{}
-
-	// Get detailed memory slots information
-	command := `Get-CimInstance Win32_PhysicalMemory | ForEach-Object {
-		[PSCustomObject]@{
-			SlotID = $_.DeviceLocator
-			Manufacturer = $_.Manufacturer
-			SerialNumber = $_.SerialNumber
-			Size = [math]::Round($_.Capacity / 1MB)
-			Type = $_.MemoryType
-			ClockSpeed = "$($_.Speed) MHz"
-			Width = "$($_.DataWidth) bits"
-			Occupied = $true
-		}
-	} | Format-List`
-	output, err := c.runPowerShell(client, command)
-	if err != nil {
-		return fmt.Errorf("failed to get memory slots: %v", err)
+	// Use the RAM info already collected in hardware info
+	memoryInfo := models.MemoryInfo{
+		TotalRAMSize: device.HardwareInfo.TotalRAM,
 	}
-
-	// Parse memory slots
-	slotRe := regexp.MustCompile(`(?s)SlotID\s*:\s*(.+?)\nManufacturer\s*:\s*(.+?)\nSerialNumber\s*:\s*(.+?)\nSize\s*:\s*(\d+)\nType\s*:\s*(\d+)\nClockSpeed\s*:\s*(.+?)\nWidth\s*:\s*(.+?)\nOccupied\s*:\s*(.+?)(?:\n|$)`)
-	matches := slotRe.FindAllStringSubmatch(output, -1)
-	for _, match := range matches {
-		if len(match) < 9 {
-			continue
-		}
-
-		slotID := strings.TrimSpace(match[1])
-		manufacturer := strings.TrimSpace(match[2])
-		serialNumber := strings.TrimSpace(match[3])
-		sizeStr := strings.TrimSpace(match[4])
-		typeStr := strings.TrimSpace(match[5])
-		clockSpeed := strings.TrimSpace(match[6])
-		width := strings.TrimSpace(match[7])
-		occupiedStr := strings.TrimSpace(match[8])
-
-		size, _ := strconv.ParseInt(sizeStr, 10, 64)
-		memType := ""
-		switch typeStr {
-		case "0":
-			memType = "Unknown"
-		case "21":
-			memType = "DDR2"
-		case "24":
-			memType = "DDR3"
-		case "26":
-			memType = "DDR4"
-		default:
-			memType = fmt.Sprintf("Type-%s", typeStr)
-		}
-
-		occupied := true
-		if occupiedStr == "False" {
-			occupied = false
-		}
-
-		slot := models.MemorySlot{
-			SlotID:       slotID,
-			Manufacturer: manufacturer,
-			SerialNumber: serialNumber,
-			Size:         size,
-			Type:         memType,
-			ClockSpeed:   clockSpeed,
-			Width:        width,
-			Occupied:     occupied,
-		}
-
-		memoryInfo.Slots = append(memoryInfo.Slots, slot)
-	}
-
-	// Get total slots info (including empty slots)
-	command = `Get-CimInstance Win32_PhysicalMemoryArray | Select-Object MemoryDevices`
-	output, err = c.runPowerShell(client, command)
-	if err == nil {
-		re := regexp.MustCompile(`MemoryDevices\s*:\s*(\d+)`)
-		matches := re.FindStringSubmatch(output)
-		if len(matches) > 1 {
-			totalSlots, err := strconv.Atoi(strings.TrimSpace(matches[1]))
-			if err == nil {
-				memoryInfo.TotalSlots = totalSlots
-			}
-		}
-	} else {
-		// Fallback: just count the slots we found
-		memoryInfo.TotalSlots = len(memoryInfo.Slots)
-	}
-
-	// Calculate summary information
-	memoryInfo.OccupiedSlots = 0
-	memoryInfo.TotalRAMSize = 0
-
-	for _, slot := range memoryInfo.Slots {
-		if slot.Occupied {
-			memoryInfo.OccupiedSlots++
-			memoryInfo.TotalRAMSize += slot.Size
-		}
-	}
-	memoryInfo.FreeSlots = memoryInfo.TotalSlots - memoryInfo.OccupiedSlots
-
+	
 	device.MemoryInfo = memoryInfo
 	return nil
 }
@@ -399,8 +349,10 @@ func (c *WinRMCollector) runCommand(client *winrm.Client, cmd string) (string, e
 
 // runPowerShell executes a PowerShell command on the remote system
 func (c *WinRMCollector) runPowerShell(client *winrm.Client, cmd string) (string, error) {
-	encodedCmd := fmt.Sprintf("powershell -NonInteractive -EncodedCommand %s", encodeCommand(cmd))
-	return c.runCommand(client, encodedCmd)
+	// Use a simpler approach that works more reliably
+	wrappedCmd := fmt.Sprintf("powershell -Command \"%s\"", strings.Replace(cmd, "\"", "`\"", -1))
+	c.Logger.Printf("Running PowerShell command: %s", wrappedCmd)
+	return c.runCommand(client, wrappedCmd)
 }
 
 // encodeCommand base64 encodes a PowerShell command

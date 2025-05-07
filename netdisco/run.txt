@@ -20,3 +20,7 @@ curl -X DELETE http://localhost:8080/api/credentials/9
 curl -X DELETE http://localhost:8080/api/discovery/5
 
 curl -X DELETE http://localhost:8080/api/jobs/5
+
+
+
+./netdisco cli --target 172.16.8.128 --win-user "Administrator" --win-pass "Mind@123" --verbose

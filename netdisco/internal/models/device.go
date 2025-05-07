@@ -13,18 +13,20 @@ const (
 
 // Device represents a discovered network device
 type Device struct {
-	IP          string    `json:"ip"`
-	Hostname    string    `json:"hostname"`
-	MAC         string    `json:"mac"`
+	IP          string     `json:"ip"`
+	Hostname    string     `json:"hostname"`
+	MAC         string     `json:"mac"`
 	DeviceType  DeviceType `json:"device_type"`
-	Reachable   bool      `json:"reachable"`
-	OpenPorts   []int     `json:"open_ports"`
-	LastScan    time.Time `json:"last_scan"`
-	OSInfo      OSInfo    `json:"os_info,omitempty"`
+	Reachable   bool       `json:"reachable"`
+	OpenPorts   []int      `json:"open_ports"`
+	LastScan    time.Time  `json:"last_scan"`
+	OSInfo      OSInfo     `json:"os_info,omitempty"`
 	HardwareInfo HardwareInfo `json:"hardware_info,omitempty"`
 	NetworkInfo  NetworkInfo  `json:"network_info,omitempty"`
 	MemoryInfo   MemoryInfo   `json:"memory_info,omitempty"`
-	ScanErrors   []string  `json:"scan_errors,omitempty"`
+	SoftwareInfo []SoftwareInfo `json:"software_info,omitempty"`
+	LastUpdates  string     `json:"last_updates,omitempty"` // Recent system updates
+	ScanErrors   []string   `json:"scan_errors,omitempty"`
 }
 
 // OSInfo contains operating system information
@@ -34,6 +36,8 @@ type OSInfo struct {
 	Distribution string `json:"distribution,omitempty"`
 	Kernel       string `json:"kernel,omitempty"`
 	Architecture string `json:"architecture"`
+	Manufacturer string `json:"manufacturer,omitempty"`
+	Model        string `json:"model,omitempty"`
 }
 
 // HardwareInfo contains hardware specifications
@@ -80,4 +84,12 @@ type MemoryInfo struct {
 	FreeSlots      int         `json:"free_slots"`
 	TotalRAMSize   int64       `json:"total_ram_size_mb"` // In MB
 	Slots          []MemorySlot `json:"slots,omitempty"`
+}
+
+// SoftwareInfo represents installed software on a device
+type SoftwareInfo struct {
+	Name     string `json:"name"`
+	Version  string `json:"version,omitempty"`
+	Vendor   string `json:"vendor,omitempty"`
+	InstallDate string `json:"install_date,omitempty"`
 } 

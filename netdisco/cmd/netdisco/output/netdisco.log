@@ -1,0 +1,11 @@
+2025/05/06 10:59:18 NetDisco starting with target: 172.16.10.132
+2025/05/06 10:59:18 WinRM credentials provided for Windows systems (username: admin)
+2025/05/06 10:59:18 Starting discovery with target: 172.16.10.132
+2025/05/06 10:59:18 Parsed 1 IP addresses to scan
+2025/05/06 10:59:18 Device 172.16.10.132 is reachable
+2025/05/06 10:59:20 Device 172.16.10.132 confirmed as Windows (WinRM authentication successful)
+2025/05/06 10:59:20 Discovery completed. Found 1 devices, 1 reachable
+2025/05/06 10:59:20 Starting to collect detailed information from 1 devices
+2025/05/06 10:59:20 Starting collection for device 172.16.10.132 (type: windows)
+2025/05/06 10:59:22 Error: WinRM authentication failed for 172.16.10.132: unsupported action: http://schemas.dmtf.org/wbem/wsman/1/wsman/fault (stderr: )
+2025/05/06 10:59:22 Information collection completed for 1 devices

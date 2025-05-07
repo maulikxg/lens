@@ -22,7 +22,11 @@ type SSHConfig struct {
 
 // WinRMConfig represents WinRM connection configuration
 type WinRMConfig struct {
-	Username string
-	Password string
-	Port     int
+	Username    string
+	Password    string
+	Port        int
+	UseHTTPS    bool   // Whether to use HTTPS for WinRM
+	UseNTLM     bool   // Whether to use NTLM authentication
+	Domain      string // Domain for NTLM authentication
+	Certificate string // Certificate for HTTPS authentication
 } 

@@ -1,0 +1,243 @@
+2025/05/07 11:01:35 
+=== WINRM CONNECTION TEST ===
+2025/05/07 11:01:35 Connecting to 172.16.8.128:5985 as Administrator
+2025/05/07 11:01:36 
+✓ Successfully connected as: win-rfgaf0c0008\administrator
+2025/05/07 11:01:36 
+=== SYSTEM INFORMATION ===
+2025/05/07 11:01:37 
+==================================================
+HOSTNAME
+==================================================
+WIN-RFGAF0C0008
+2025/05/07 11:01:38 
+==================================================
+IP CONFIGURATION
+==================================================
+Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : WIN-RFGAF0C0008
+   Primary Dns Suffix  . . . . . . . : 
+   Node Type . . . . . . . . . . . . : Hybrid
+   IP Routing Enabled. . . . . . . . : No
+   WINS Proxy Enabled. . . . . . . . : No
+
+Ethernet adapter Ethernet0:
+
+   Connection-specific DNS Suffix  . : 
+   Description . . . . . . . . . . . : Intel(R) 82574L Gigabit Network Connection
+   Physical Address. . . . . . . . . : 00-50-56-9E-52-BF
+   DHCP Enabled. . . . . . . . . . . : No
+   Autoconfiguration Enabled . . . . : Yes
+   IPv6 Address. . . . . . . . . . . : fd00:1:1:1:106e:c69d:8ff8:afd8(Preferred) 
+   Link-local IPv6 Address . . . . . : fe80::106e:c69d:8ff8:afd8%4(Preferred) 
+   IPv4 Address. . . . . . . . . . . : 172.16.8.128(Preferred) 
+   Subnet Mask . . . . . . . . . . . : 255.255.248.0
+   Default Gateway . . . . . . . . . : fe80::8639:8fff:fe1e:540%4
+                                       172.16.10.1
+   DHCPv6 IAID . . . . . . . . . . . : 302010454
+   DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-2D-CF-AC-26-00-50-56-9E-52-BF
+   DNS Servers . . . . . . . . . . . : 8.8.8.8
+   NetBIOS over Tcpip. . . . . . . . : Enabled
+
+Tunnel adapter isatap.{9847A003-2290-42F2-B55D-4E47FD240A34}:
+
+   Media State . . . . . . . . . . . : Media disconnected
+   Connection-specific DNS Suffix  . : 
+   Description . . . . . . . . . . . : Microsoft ISATAP Adapter
+   Physical Address. . . . . . . . . : 00-00-00-00-00-00-00-E0
+   DHCP Enabled. . . . . . . . . . . : No
+   Autoconfiguration Enabled . . . . : Yes
+
+Tunnel adapter Teredo Tunneling Pseudo-Interface:
+
+   Connection-specific DNS Suffix  . : 
+   Description . . . . . . . . . . . : Teredo Tunneling Pseudo-Interface
+   Physical Address. . . . . . . . . : 00-00-00-00-00-00-00-E0
+   DHCP Enabled. . . . . . . . . . . : No
+   Autoconfiguration Enabled . . . . : Yes
+   IPv6 Address. . . . . . . . . . . : 2001:0:348b:fb58:55:69e:d28b:313d(Preferred) 
+   Link-local IPv6 Address . . . . . : fe80::55:69e:d28b:313d%3(Preferred) 
+   Default Gateway . . . . . . . . . : 
+   DHCPv6 IAID . . . . . . . . . . . : 134217728
+   DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-2D-CF-AC-26-00-50-56-9E-52-BF
+   NetBIOS over Tcpip. . . . . . . . : Disabled
+2025/05/07 11:01:59 
+==================================================
+OS INFORMATION
+==================================================
+OS Name:                   Microsoft Windows Server 2016 Standard
+OS Version:                10.0.14393 N/A Build 14393
+System Type:               x64-based PC
+2025/05/07 11:02:01 
+==================================================
+WINDOWS VERSION
+==================================================
+Microsoft Windows [Version 10.0.14393]
+2025/05/07 11:02:03 
+==================================================
+LOGGED-IN USER
+==================================================
+Administrator
+2025/05/07 11:02:35 
+==================================================
+SYSTEM UPTIME
+==================================================
+System Boot Time:          4/10/2025, 1:42:56 AM
+2025/05/07 11:02:36 
+==================================================
+CPU INFORMATION
+==================================================
+Name                                      NumberOfCores  NumberOfLogicalProcessors  
+Intel(R) Xeon(R) CPU E7- 8870  @ 2.40GHz  2              2                          
+Intel(R) Xeon(R) CPU E7- 8870  @ 2.40GHz  2              2                          
+Intel(R) Xeon(R) CPU E7- 8870  @ 2.40GHz  2              2                          
+Intel(R) Xeon(R) CPU E7- 8870  @ 2.40GHz  2              2
+2025/05/07 11:02:38 
+==================================================
+MEMORY INFORMATION
+==================================================
+Capacity    PartNumber  Speed  
+8589934592
+2025/05/07 11:02:40 
+==================================================
+DISK INFORMATION
+==================================================
+MediaType              Model                                 Size         
+Fixed hard disk media  VMware Virtual disk SCSI Disk Device  85896599040
+2025/05/07 11:02:41 
+==================================================
+BIOS INFORMATION
+==================================================
+Manufacturer              SerialNumber                                            Version           
+Phoenix Technologies LTD  VMware-42 1e 93 dd 3d 57 0e 6c-cd ef 16 ef 2b ca 2d 03  INTEL  - 6040000
+2025/05/07 11:02:43 
+==================================================
+SYSTEM MODEL
+==================================================
+IdentifyingNumber                                       Name                     
+VMware-42 1e 93 dd 3d 57 0e 6c-cd ef 16 ef 2b ca 2d 03  VMware Virtual Platform
+2025/05/07 11:03:01 
+==================================================
+TIME ZONE
+==================================================
+Time Zone:                 (UTC-08:00) Pacific Time (US & Canada)
+2025/05/07 11:03:02 
+==================================================
+LAST BOOT TIME
+==================================================
+LastBootUpTime             
+20250410014256.485222-420
+2025/05/07 11:03:21 
+==================================================
+DOMAIN INFORMATION
+==================================================
+Domain:                    WORKGROUP
+2025/05/07 11:03:22 
+==================================================
+NETWORK CONNECTIONS
+==================================================
+Active Connections
+
+  Proto  Local Address          Foreign Address        State           PID
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1032
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:1435           0.0.0.0:0              LISTENING       4436
+  TCP    0.0.0.0:1439           0.0.0.0:0              LISTENING       4444
+  TCP    0.0.0.0:1440           0.0.0.0:0              LISTENING       2544
+  TCP    0.0.0.0:2382           0.0.0.0:0              LISTENING       2384
+  TCP    0.0.0.0:3306           0.0.0.0:0              LISTENING       2640
+  TCP    0.0.0.0:3389           0.0.0.0:0              LISTENING       1144
+  TCP    0.0.0.0:5985           0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:8067           0.0.0.0:0              LISTENING       2256
+  TCP    0.0.0.0:8068           0.0.0.0:0              LISTENING       5728
+  TCP    0.0.0.0:8069           0.0.0.0:0              LISTENING       6068
+  TCP    0.0.0.0:8080           0.0.0.0:0              LISTENING       8116
+  TCP    0.0.0.0:14333          0.0.0.0:0              LISTENING       4420
+  TCP    0.0.0.0:47001          0.0.0.0:0              LISTENING       4
+  TCP    0.0.0.0:49664          0.0.0.0:0              LISTENING       888
+  TCP    0.0.0.0:49665          0.0.0.0:0              LISTENING       1252
+  TCP    0.0.0.0:49667          0.0.0.0:0              LISTENING       1572
+  TCP    0.0.0.0:49668          0.0.0.0:0              LISTENING       1136
+  TCP    0.0.0.0:49673          0.0.0.0:0              LISTENING       1068
+  TCP    0.0.0.0:49692          0.0.0.0:0              LISTENING       120
+  TCP    0.0.0.0:49711          0.0.0.0:0              LISTENING       1016
+  TCP    127.0.0.1:49359        0.0.0.0:0              LISTENING       2544
+  TCP    127.0.0.1:49376        127.0.0.1:49377        ESTABLISHED     12284
+  TCP    127.0.0.1:49377        127.0.0.1:49376        ESTABLISHED     12284
+  TCP    127.0.0.1:49380        127.0.0.1:49381        ESTABLISHED     12940
+  TCP    127.0.0.1:49381        127.0.0.1:49380        ESTABLISHED     12940
+  TCP    127.0.0.1:49454        127.0.0.1:49455        ESTABLISHED     12284
+  TCP    127.0.0.1:49455        127.0.0.1:49454        ESTABLISHED     12284
+  TCP    127.0.0.1:49799        127.0.0.1:49800        ESTABLISHED     8116
+  TCP    127.0.0.1:49800        127.0.0.1:49799        ESTABLISHED     8116
+  TCP    127.0.0.1:49801        127.0.0.1:49802        ESTABLISHED     8116
+  TCP    127.0.0.1:49802        127.0.0.1:49801        ESTABLISHED     8116
+  TCP    127.0.0.1:51310        0.0.0.0:0              LISTENING       4420
+  TCP    127.0.0.1:52081        127.0.0.1:52082        ESTABLISHED     12284
+  TCP    127.0.0.1:52082        127.0.0.1:52081        ESTABLISHED     12284
+  TCP    172.16.8.128:139       0.0.0.0:0              LISTENING       4
+  TCP    172.16.8.128:3389      172.16.14.71:49854     CLOSE_WAIT      1144
+  TCP    172.16.8.128:5985      10.20.40.104:47202     ESTABLISHED     4
+  TCP    172.16.8.128:5985      10.20.40.104:47218     ESTABLISHED     4
+  TCP    172.16.8.128:5985      172.16.9.242:59470     CLOSE_WAIT      4
+  TCP    172.16.8.128:55474     35.212.7.177:443       ESTABLISHED     3016
+  TCP    172.16.8.128:55613     34.149.211.227:443     ESTABLISHED     12284
+  TCP    172.16.8.128:55698     35.212.22.229:443      ESTABLISHED     12284
+  TCP    172.16.8.128:55699     4.213.25.242:443       ESTABLISHED     1136
+  TCP    172.16.8.128:55756     51.116.246.104:443     TIME_WAIT       0
+  TCP    172.16.8.128:55759     199.232.214.172:80     TIME_WAIT       0
+  TCP    172.16.8.128:55762     34.149.211.227:443     ESTABLISHED     12284
+  TCP    [::]:80                [::]:0                 LISTENING       4
+  TCP    [::]:135               [::]:0                 LISTENING       1032
+  TCP    [::]:445               [::]:0                 LISTENING       4
+  TCP    [::]:1435              [::]:0                 LISTENING       4436
+  TCP    [::]:1439              [::]:0                 LISTENING       4444
+  TCP    [::]:1440              [::]:0                 LISTENING       2544
+  TCP    [::]:2382              [::]:0                 LISTENING       2384
+  TCP    [::]:3306              [::]:0                 LISTENING       2640
+  TCP    [::]:3389              [::]:0                 LISTENING       1144
+  TCP    [::]:5985              [::]:0                 LISTENING       4
+  TCP    [::]:8080              [::]:0                 LISTENING       8116
+  TCP    [::]:14333             [::]:0                 LISTENING       4420
+  TCP    [::]:47001             [::]:0                 LISTENING       4
+  TCP    [::]:49664             [::]:0                 LISTENING       888
+  TCP    [::]:49665             [::]:0                 LISTENING       1252
+  TCP    [::]:49667             [::]:0                 LISTENING       1572
+  TCP    [::]:49668             [::]:0                 LISTENING       1136
+  TCP    [::]:49673             [::]:0                 LISTENING       1068
+  TCP    [::]:49692             [::]:0                 LISTENING       120
+  TCP    [::]:49711             [::]:0                 LISTENING       1016
+  TCP    [::1]:49359            [::]:0                 LISTENING       2544
+  TCP    [::1]:51310            [::]:0                 LISTENING       4420
+  UDP    0.0.0.0:500            *:*                                    1136
+  UDP    0.0.0.0:1434           *:*                                    2384
+  UDP    0.0.0.0:3389           *:*                                    1144
+  UDP    0.0.0.0:3544           *:*                                    1136
+  UDP    0.0.0.0:4500           *:*                                    1136
+  UDP    0.0.0.0:5050           *:*                                    1436
+  UDP    0.0.0.0:5353           *:*                                    1584
+  UDP    0.0.0.0:5355           *:*                                    1584
+  UDP    0.0.0.0:53128          *:*                                    4496
+  UDP    0.0.0.0:54262          *:*                                    12284
+  UDP    0.0.0.0:56200          *:*                                    12284
+  UDP    0.0.0.0:60006          *:*                                    12940
+  UDP    127.0.0.1:59477        *:*                                    12284
+  UDP    127.0.0.1:59822        *:*                                    1136
+  UDP    172.16.8.128:137       *:*                                    4
+  UDP    172.16.8.128:138       *:*                                    4
+  UDP    172.16.8.128:63841     *:*                                    1136
+  UDP    [::]:500               *:*                                    1136
+  UDP    [::]:1434              *:*                                    2384
+  UDP    [::]:3389              *:*                                    1144
+  UDP    [::]:4500              *:*                                    1136
+  UDP    [::]:5353              *:*                                    1584
+  UDP    [::]:5355              *:*                                    1584
+  UDP    [::]:53127             *:*                                    4496
+2025/05/07 11:03:22 
+=== TEST SUMMARY ===
+2025/05/07 11:03:22 Target:       172.16.8.128:5985
+2025/05/07 11:03:22 Connected as: win-rfgaf0c0008\administrator
+2025/05/07 11:03:22 Commands run: 15
+2025/05/07 11:03:22 Results saved to winrm_test_results.log

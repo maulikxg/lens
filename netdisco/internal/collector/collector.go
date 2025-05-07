@@ -3,6 +3,7 @@ package collector
 import (
 	"fmt"
 	"log"
+	"runtime"
 
 	"github.com/netdisco/netdisco/internal/models"
 )
@@ -27,5 +28,17 @@ func NewCollector(config *models.Config, logger *log.Logger, deviceType models.D
 		return NewWinRMCollector(config, logger), nil
 	default:
 		return nil, fmt.Errorf("unsupported device type: %s", deviceType)
+	}
+}
+
+// GetCurrentOSType returns the OS type of the machine running the application
+func GetCurrentOSType() models.DeviceType {
+	switch runtime.GOOS {
+	case "windows":
+		return models.DeviceTypeWindows
+	case "linux":
+		return models.DeviceTypeLinux
+	default:
+		return models.DeviceTypeUnknown
 	}
 } 

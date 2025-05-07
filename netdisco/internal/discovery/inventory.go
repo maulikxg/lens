@@ -7,6 +7,7 @@ import (
 
 	"github.com/netdisco/netdisco/internal/collector"
 	"github.com/netdisco/netdisco/internal/models"
+	"github.com/netdisco/netdisco/internal/utils"
 )
 
 // CollectDeviceInfo collects detailed information from discovered devices
@@ -24,8 +25,22 @@ func CollectDeviceInfo(devices []models.Device, config *models.Config, logger *l
 	
 	// Start collection for each reachable device
 	for _, device := range devices {
-		if !device.Reachable || device.DeviceType == models.DeviceTypeUnknown {
-			// Skip unreachable or unknown devices
+		if !device.Reachable {
+			// Skip unreachable devices
+			results <- device
+			continue
+		}
+		
+		// For unknown device types, try more advanced OS detection
+		if device.DeviceType == models.DeviceTypeUnknown && len(device.OpenPorts) > 0 {
+			device.DeviceType = utils.DetectRemoteOSType(device.IP, config.Timeout)
+			logger.Printf("Advanced OS detection for %s: %s", device.IP, device.DeviceType)
+		}
+		
+		// Skip devices that still have unknown type
+		if device.DeviceType == models.DeviceTypeUnknown {
+			logger.Printf("Skipping device %s: unknown device type", device.IP)
+			device.ScanErrors = append(device.ScanErrors, "Unable to determine device type")
 			results <- device
 			continue
 		}

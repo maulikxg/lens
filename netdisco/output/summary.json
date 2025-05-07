@@ -1,41 +1,68 @@
 {
   "total_devices": 1,
-  "reachable_devices": 0,
+  "reachable_devices": 1,
   "linux_devices": 0,
-  "windows_devices": 0,
-  "unknown_devices": 1,
+  "windows_devices": 1,
+  "unknown_devices": 0,
   "devices": [
     {
-      "ip": "10.20.40.103",
-      "hostname": "",
-      "mac": "",
-      "device_type": "unknown",
-      "reachable": false,
-      "open_ports": null,
-      "last_scan": "2025-05-05T11:33:35.991208638+05:30",
+      "ip": "172.16.8.128",
+      "hostname": "WIN-RFGAF0C0008",
+      "mac": "00-50-56-9E-52-BF",
+      "device_type": "windows",
+      "reachable": true,
+      "open_ports": [
+        80,
+        3389,
+        5985
+      ],
+      "last_scan": "2025-05-06T15:17:46.940489163+05:30",
       "os_info": {
-        "name": "",
-        "version": "",
-        "architecture": ""
+        "name": "Microsoft Windows Server 2016 Standard",
+        "version": "10.0.14393 N/A Build 14393",
+        "distribution": "windows",
+        "architecture": "x64-based PC"
       },
       "hardware_info": {
-        "cpu_model": "",
-        "cpu_cores": 0,
-        "total_ram_mb": 0,
-        "total_disk_space_gb": 0,
-        "free_disk_space_gb": 0
+        "cpu_model": "4 Processor(s) Installed.",
+        "cpu_cores": 4,
+        "total_ram_mb": 8191,
+        "total_disk_space_gb": 79,
+        "free_disk_space_gb": 42
       },
       "network_info": {
-        "interfaces": null,
-        "hostname": ""
+        "interfaces": [
+          {
+            "name": "Ethernet0",
+            "mac": "00-50-56-9E-52-BF",
+            "ip": "172.16.8.128",
+            "netmask": "255.255.248.0",
+            "status": ""
+          },
+          {
+            "name": "Tunnel adapter isatap.{9847A003-2290-42F2-B55D-4E47FD240A34}",
+            "mac": "00-00-00-00-00-00-00-E0",
+            "ip": "",
+            "netmask": "",
+            "status": ""
+          },
+          {
+            "name": "Tunnel adapter Teredo Tunneling Pseudo-Interface",
+            "mac": "00-00-00-00-00-00-00-E0",
+            "ip": "",
+            "netmask": "",
+            "status": ""
+          }
+        ],
+        "hostname": "WIN-RFGAF0C0008"
       },
       "memory_info": {
         "total_slots": 0,
         "occupied_slots": 0,
         "free_slots": 0,
-        "total_ram_size_mb": 0
+        "total_ram_size_mb": 8191
       }
     }
   ],
-  "timestamp": "2025-05-05T11:34:36+05:30"
+  "timestamp": "2025-05-06T15:18:54+05:30"
 }
